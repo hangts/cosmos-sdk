@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"fmt"
+	"log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,6 +30,7 @@ func (k Keeper) ConnOpenInit(
 
 	// connection defines chain A's ConnectionEnd
 	connection := types.NewConnectionEnd(exported.INIT, clientID, counterparty, types.GetCompatibleVersions())
+	fmt.Printf("Connection:\n%#v\n", connection)
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
@@ -56,12 +58,14 @@ func (k Keeper) ConnOpenTry(
 	proofHeight uint64, // height at which relayer constructs proof of A storing connectionEnd in state
 	consensusHeight uint64, // latest height of chain B which chain A has stored in its chain B client
 ) error {
+	log.Print("ENTER CONNOPENTRY")
 	if consensusHeight > uint64(ctx.BlockHeight()) {
 		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
 	}
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
+		fmt.Println("self not found")
 		return clienttypes.ErrSelfConsensusStateNotFound
 	}
 
@@ -70,6 +74,7 @@ func (k Keeper) ConnOpenTry(
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, connectionID, prefix)
 	expectedConnection := types.NewConnectionEnd(exported.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
+	fmt.Printf("ExpectedConnection:\n%#v\n", expectedConnection)
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
@@ -77,14 +82,17 @@ func (k Keeper) ConnOpenTry(
 
 	// connection defines chain B's ConnectionEnd
 	connection := types.NewConnectionEnd(exported.UNINITIALIZED, clientID, counterparty, []string{version})
+	fmt.Printf("Connection:\n%#v\n", connection)
 
 	// Check that ChainA committed expectedConnectionEnd to its state
+	fmt.Println("START VERIFY CONNECTION STATE")
 	if err := k.VerifyConnectionState(
 		ctx, connection, proofHeight, proofInit, counterparty.ConnectionID,
 		expectedConnection,
 	); err != nil {
 		return err
 	}
+	fmt.Println("END VERIFY CONNECTION STATE")
 
 	// Check that ChainA stored the correct ConsensusState of chainB at the given consensusHeight
 	if err := k.VerifyClientConsensusState(

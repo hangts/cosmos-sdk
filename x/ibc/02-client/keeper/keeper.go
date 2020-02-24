@@ -129,6 +129,7 @@ func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, max
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.ConsensusState, bool) {
 	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(height))
 	if !found {
+		fmt.Println("HISTORICAL INFO NOT FOUND")
 		return nil, false
 	}
 

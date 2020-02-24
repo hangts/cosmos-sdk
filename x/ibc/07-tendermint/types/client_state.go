@@ -151,10 +151,14 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(connectionEnd)
+	fmt.Println("HELLO IM GOING TO MARSHAL")
+	fmt.Println("My height is:", height)
+	bz, err := cdc.MarshalBinaryLengthPrefixed(connectionEnd)
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("Consensus state root: %X\n", consensusState.GetRoot())
 
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())

@@ -1,6 +1,8 @@
 package staking
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,6 +12,7 @@ import (
 // BeginBlocker will persist the current header and validator set as a historical entry
 // and prune the oldest entry based on the HistoricalEntries parameter
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+	fmt.Println("IN STAKING BEGIN BLOCKER")
 	k.TrackHistoricalInfo(ctx)
 }
 
